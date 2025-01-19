@@ -459,6 +459,7 @@ class juego:
         return False
 
 
+
         
     def _move(self, fil, col):
         pieza = self.tablero.get_pieza(fil, col)
