@@ -67,7 +67,7 @@
         "kind": 2,
         "importPath": "app",
         "description": "app",
-        "peekOfCode": "def draw_valid_moves(win, moves):\n    for row, col in moves:\n        x = col * SQUARE_SIZE + SQUARE_SIZE // 2\n        y = row * SQUARE_SIZE + SQUARE_SIZE // 2\n        pygame.draw.circle(win, BLUE, (x, y), 10)\n# Movimiento de la máquina\ndef machine_turn():\n    for row in range(ROWS):\n        for col in range(COLS):\n            if board[row][col] == \"B\":",
+        "peekOfCode": "def draw_valid_moves(win, moves):\n    for row, col in moves:\n        x = col * SQUARE_SIZE + SQUARE_SIZE // 2\n        y = row * SQUARE_SIZE + SQUARE_SIZE // 2\n        pygame.draw.circle(win, BLUE, (x, y), 10)\n# Movimiento de la máquina\ndef machine_turn():\n    for row in range(ROWS):\n        for col in range(COLS):\n            if board[row][col] in (\"B\", \"QB\"):",
         "detail": "app",
         "documentation": {}
     },
@@ -76,7 +76,7 @@
         "kind": 2,
         "importPath": "app",
         "description": "app",
-        "peekOfCode": "def machine_turn():\n    for row in range(ROWS):\n        for col in range(COLS):\n            if board[row][col] == \"B\":\n                valid_moves = get_valid_moves(row, col)\n                if valid_moves:\n                    target = random.choice(valid_moves)\n                    move_piece((row, col), *target)\n                    return\ndef human_turn(event, selected_piece, valid_moves, turn):",
+        "peekOfCode": "def machine_turn():\n    for row in range(ROWS):\n        for col in range(COLS):\n            if board[row][col] in (\"B\", \"QB\"):\n                valid_moves = get_valid_moves(row, col)\n                if valid_moves:\n                    target = random.choice(valid_moves)\n                    move_piece((row, col), *target)\n                    return\ndef human_turn(event, selected_piece, valid_moves, turn):",
         "detail": "app",
         "documentation": {}
     },

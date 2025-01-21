@@ -89,11 +89,16 @@ def get_valid_moves(row, col):
 
         # Movimiento de captura
         capture_row, capture_col = row + 2 * dr, col + 2 * dc
-        if (0 <= capture_row < ROWS and 0 <= capture_col < COLS and
-            board[r][c] and  # Hay una pieza en la casilla de destino
-            board[r][c] != piece and  # La pieza es contraria
-            not board[capture_row][capture_col]):  # La casilla de salto está vacía
-            moves.append((capture_row, capture_col))
+        if (0 <= capture_row < ROWS and 0 <= capture_col < COLS and  # Verifica que la captura esté dentro del tablero
+            board[r][c] and  # Hay una pieza en la casilla intermedia
+            board[capture_row][capture_col] is None):  # La casilla de salto está vacía
+
+            # Validar que no se capturen piezas propias
+            if piece in ("W", "QW") and board[r][c] not in ("W", "QW"):  # Si es blanca, no puede capturar blancas
+                moves.append((capture_row, capture_col))
+            elif piece in ("B", "QB") and board[r][c] not in ("B", "QB"):  # Si es negra, no puede capturar negras
+                moves.append((capture_row, capture_col))
+
 
     return moves
 
@@ -133,7 +138,7 @@ def draw_valid_moves(win, moves):
 def machine_turn():
     for row in range(ROWS):
         for col in range(COLS):
-            if board[row][col] == "B":
+            if board[row][col] in ("B", "QB"):
                 valid_moves = get_valid_moves(row, col)
                 if valid_moves:
                     target = random.choice(valid_moves)
@@ -159,7 +164,7 @@ def human_turn(event, selected_piece, valid_moves, turn):
                 # Deseleccionar
                 selected_piece = None
                 valid_moves = []
-        elif board[row][col] == "W":
+        elif board[row][col] in ("W", "QW"):
             # Seleccionar una pieza
             selected_piece = (row, col)
             valid_moves = get_valid_moves(row, col)
