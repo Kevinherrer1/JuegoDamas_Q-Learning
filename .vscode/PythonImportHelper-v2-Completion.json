@@ -1,0 +1,173 @@
+[
+    {
+        "label": "pygame",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pygame",
+        "description": "pygame",
+        "detail": "pygame",
+        "documentation": {}
+    },
+    {
+        "label": "random",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "random",
+        "description": "random",
+        "detail": "random",
+        "documentation": {}
+    },
+    {
+        "label": "init_pieces",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def init_pieces():\n    for row in range(ROWS):\n        for col in range(COLS):\n            if row == 0 and col % 2 == 0:  # Primera fila (blancas) en columnas pares\n                board[row][col] = \"W\"  # Blancas\n            elif row == 3 and col % 2 != 0:  # Última fila (negras) en columnas impares\n                board[row][col] = \"B\"  # Negras\n# Dibujar el tablero\ndef draw_board(win):\n    for row in range(ROWS):",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "draw_board",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def draw_board(win):\n    for row in range(ROWS):\n        for col in range(COLS):\n            color = DARK_COLOR if (row + col) % 2 == 0 else LIGHT_COLOR\n            pygame.draw.rect(win, color, (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))\n# Dibujar las piezas\ndef draw_pieces(win):\n    for row in range(ROWS):\n        for col in range(COLS):\n            piece = board[row][col]",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "draw_pieces",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def draw_pieces(win):\n    for row in range(ROWS):\n        for col in range(COLS):\n            piece = board[row][col]\n            if piece:\n                x = col * SQUARE_SIZE + SQUARE_SIZE // 2\n                y = row * SQUARE_SIZE + SQUARE_SIZE // 2\n                radius = SQUARE_SIZE // 3\n                if piece == \"W\":\n                    pygame.draw.circle(win, WHITE, (x, y), radius)",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "get_valid_moves",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def get_valid_moves(row, col):\n    piece = board[row][col]\n    moves = []\n    if not piece:\n        return moves\n    directions = []  # Direcciones de movimiento\n    # Direcciones según el tipo de pieza\n    if piece == \"B\":  # Piezas negras\n        directions = [(-1, -1), (-1, 1)]  # Movimientos hacia arriba\n    elif piece == \"W\":  # Piezas blancas",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "move_piece",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def move_piece(selected_piece, target_row, target_col):\n    row, col = selected_piece\n    piece = board[row][col]\n    board[row][col] = None  # Vaciar la casilla de la pieza seleccionada\n    # Si la jugada es una captura, vaciar la casilla de la pieza capturada\n    mid_row = (row + target_row) // 2  # Fila de la pieza capturada\n    mid_col = (col + target_col) // 2  # Columna de la pieza capturada\n    if abs(row - target_row) > 1:  # Verificar si la jugada fue una captura\n        board[mid_row][mid_col] = None  # Vaciar la casilla de la pieza capturada\n    board[target_row][target_col] = piece  # Colocar la pieza en la nueva casilla",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "draw_valid_moves",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def draw_valid_moves(win, moves):\n    for row, col in moves:\n        x = col * SQUARE_SIZE + SQUARE_SIZE // 2\n        y = row * SQUARE_SIZE + SQUARE_SIZE // 2\n        pygame.draw.circle(win, BLUE, (x, y), 10)\n# Movimiento de la máquina\ndef machine_turn():\n    for row in range(ROWS):\n        for col in range(COLS):\n            if board[row][col] == \"B\":",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "machine_turn",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def machine_turn():\n    for row in range(ROWS):\n        for col in range(COLS):\n            if board[row][col] == \"B\":\n                valid_moves = get_valid_moves(row, col)\n                if valid_moves:\n                    target = random.choice(valid_moves)\n                    move_piece((row, col), *target)\n                    return\ndef human_turn(event, selected_piece, valid_moves, turn):",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "human_turn",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def human_turn(event, selected_piece, valid_moves, turn):\n    # Lógica de interacción del jugador humano\n    if event.type == pygame.MOUSEBUTTONDOWN:\n        x, y = pygame.mouse.get_pos()\n        row, col = y // SQUARE_SIZE, x // SQUARE_SIZE\n        if selected_piece:\n            # Si selecciona una posición válida, mover la pieza\n            if (row, col) in valid_moves:\n                move_piece(selected_piece, row, col)\n                selected_piece = None",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def main():\n    run = True\n    clock = pygame.time.Clock()\n    init_pieces()\n    selected_piece = None\n    valid_moves = []\n    turn = \"HUMANO\"  # Turno inicial\n    while run:\n        clock.tick(60)\n        for event in pygame.event.get():",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "SQUARE_SIZE",
+        "kind": 5,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "SQUARE_SIZE = WIDTH // COLS\n# Colores\nLIGHT_COLOR = (205, 170, 125) \nDARK_COLOR = (120, 85, 55) \nWHITE = (255, 255, 255)\nBLACK = (0, 0, 0)\nBLUE = (0, 0, 255)\n# Configuración de la ventana\nWIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "LIGHT_COLOR",
+        "kind": 5,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "LIGHT_COLOR = (205, 170, 125) \nDARK_COLOR = (120, 85, 55) \nWHITE = (255, 255, 255)\nBLACK = (0, 0, 0)\nBLUE = (0, 0, 255)\n# Configuración de la ventana\nWIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Tablero inicial dinámico\nboard = [[None for _ in range(COLS)] for _ in range(ROWS)]",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "DARK_COLOR",
+        "kind": 5,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "DARK_COLOR = (120, 85, 55) \nWHITE = (255, 255, 255)\nBLACK = (0, 0, 0)\nBLUE = (0, 0, 255)\n# Configuración de la ventana\nWIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Tablero inicial dinámico\nboard = [[None for _ in range(COLS)] for _ in range(ROWS)]\n# Inicializar las piezas dinámicamente",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "WHITE",
+        "kind": 5,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "WHITE = (255, 255, 255)\nBLACK = (0, 0, 0)\nBLUE = (0, 0, 255)\n# Configuración de la ventana\nWIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Tablero inicial dinámico\nboard = [[None for _ in range(COLS)] for _ in range(ROWS)]\n# Inicializar las piezas dinámicamente\ndef init_pieces():",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "BLACK",
+        "kind": 5,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "BLACK = (0, 0, 0)\nBLUE = (0, 0, 255)\n# Configuración de la ventana\nWIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Tablero inicial dinámico\nboard = [[None for _ in range(COLS)] for _ in range(ROWS)]\n# Inicializar las piezas dinámicamente\ndef init_pieces():\n    for row in range(ROWS):",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "BLUE",
+        "kind": 5,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "BLUE = (0, 0, 255)\n# Configuración de la ventana\nWIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Tablero inicial dinámico\nboard = [[None for _ in range(COLS)] for _ in range(ROWS)]\n# Inicializar las piezas dinámicamente\ndef init_pieces():\n    for row in range(ROWS):\n        for col in range(COLS):",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "WIN",
+        "kind": 5,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "WIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Tablero inicial dinámico\nboard = [[None for _ in range(COLS)] for _ in range(ROWS)]\n# Inicializar las piezas dinámicamente\ndef init_pieces():\n    for row in range(ROWS):\n        for col in range(COLS):\n            if row == 0 and col % 2 == 0:  # Primera fila (blancas) en columnas pares\n                board[row][col] = \"W\"  # Blancas",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "board",
+        "kind": 5,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "board = [[None for _ in range(COLS)] for _ in range(ROWS)]\n# Inicializar las piezas dinámicamente\ndef init_pieces():\n    for row in range(ROWS):\n        for col in range(COLS):\n            if row == 0 and col % 2 == 0:  # Primera fila (blancas) en columnas pares\n                board[row][col] = \"W\"  # Blancas\n            elif row == 3 and col % 2 != 0:  # Última fila (negras) en columnas impares\n                board[row][col] = \"B\"  # Negras\n# Dibujar el tablero",
+        "detail": "app",
+        "documentation": {}
+    }
+]
