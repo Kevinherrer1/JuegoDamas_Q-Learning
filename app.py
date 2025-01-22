@@ -1,6 +1,7 @@
 import pygame
 import random
 
+
 # Inicializar Pygame
 pygame.init()
 
@@ -173,6 +174,42 @@ def human_turn(event, selected_piece, valid_moves, turn):
 
 
 
+def check_winner():
+    # Contar las piezas restantes de cada jugador
+    human_pieces = sum(row.count("W") + row.count("QW") for row in board)
+    machine_pieces = sum(row.count("B") + row.count("QB") for row in board)
+
+    if human_pieces == 0:
+        return "MÁQUINA"
+    elif machine_pieces == 0:
+        return "HUMANO"
+
+    # Verificar si ambos jugadores tienen movimientos válidos
+    human_moves = any(get_valid_moves(row, col) for row in range(ROWS) for col in range(COLS) if board[row][col] in ("W", "QW"))
+    machine_moves = any(get_valid_moves(row, col) for row in range(ROWS) for col in range(COLS) if board[row][col] in ("B", "QB"))
+
+    if not human_moves and not machine_moves:
+        return "EMPATE"
+    elif not human_moves:
+        return "MÁQUINA"
+    elif not machine_moves:
+        return "HUMANO"
+
+    return None  # El juego continúa
+
+def draw_winner(win, winner):
+    font = pygame.font.SysFont("arial", 48)  # Fuente y tamaño del texto
+    if winner == "EMPATE":
+        text = font.render("¡EMPATE!", True, (255, 255, 255))
+    else:
+        text = font.render(f"¡El ganador es: {winner}!", True, (255, 255, 255))
+    text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))  # Centrar el texto
+    pygame.draw.rect(win, (0, 0, 0), text_rect.inflate(20, 20))  # Fondo negro para el texto
+    win.blit(text, text_rect)
+    pygame.display.update()
+    pygame.time.delay(3000)  # Esperar 3 segundos antes de cerrar
+
+
 # Juego principal
 def main():
     run = True
@@ -183,6 +220,8 @@ def main():
     selected_piece = None
     valid_moves = []
     turn = "HUMANO"  # Turno inicial
+    move_counter = 0 #contador de movimientos
+    
 
     while run:
         clock.tick(60)
@@ -194,11 +233,28 @@ def main():
             if turn == "HUMANO":
                 # Llamar a la función para el turno del humano
                 selected_piece, valid_moves, turn = human_turn(event, selected_piece, valid_moves, turn)
+                move_counter += 1
 
         # Turno de la máquina
         if turn == "MÁQUINA":
             machine_turn()
             turn = "HUMANO"
+            move_counter += 1
+            
+        #Verificar si hay un ganador
+        winner = check_winner()
+        if winner:
+            draw_board(WIN)
+            draw_pieces(WIN)
+            draw_winner(WIN, winner)
+            run = False
+            
+        if move_counter == 5:
+            draw_board(WIN)
+            draw_pieces(WIN)
+            draw_winner(WIN, "EMPATE")
+            run = False
+            
 
         # Dibujar todo
         draw_board(WIN)
