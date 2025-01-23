@@ -233,7 +233,7 @@ def main():
             if turn == "HUMANO":
                 # Llamar a la función para el turno del humano
                 selected_piece, valid_moves, turn = human_turn(event, selected_piece, valid_moves, turn)
-                move_counter += 1
+                
 
         # Turno de la máquina
         if turn == "MÁQUINA":
@@ -249,7 +249,7 @@ def main():
             draw_winner(WIN, winner)
             run = False
             
-        if move_counter == 5:
+        if move_counter == 64:
             draw_board(WIN)
             draw_pieces(WIN)
             draw_winner(WIN, "EMPATE")
