@@ -18,6 +18,15 @@
         "documentation": {}
     },
     {
+        "label": "pickle",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pickle",
+        "description": "pickle",
+        "detail": "pickle",
+        "documentation": {}
+    },
+    {
         "label": "init_pieces",
         "kind": 2,
         "importPath": "app",
@@ -67,7 +76,52 @@
         "kind": 2,
         "importPath": "app",
         "description": "app",
-        "peekOfCode": "def draw_valid_moves(win, moves):\n    for row, col in moves:\n        x = col * SQUARE_SIZE + SQUARE_SIZE // 2\n        y = row * SQUARE_SIZE + SQUARE_SIZE // 2\n        pygame.draw.circle(win, BLUE, (x, y), 10)\n# Movimiento de la máquina\ndef machine_turn():\n    for row in range(ROWS):\n        for col in range(COLS):\n            if board[row][col] in (\"B\", \"QB\"):",
+        "peekOfCode": "def draw_valid_moves(win, moves):\n    for row, col in moves:\n        x = col * SQUARE_SIZE + SQUARE_SIZE // 2\n        y = row * SQUARE_SIZE + SQUARE_SIZE // 2\n        pygame.draw.circle(win, BLUE, (x, y), 10)\n# Guardar y cargar Q-Table\ndef save_q_table(filename=\"q_table.pkl\"):\n    with open(filename, \"wb\") as file:\n        pickle.dump(q_table, file)\ndef load_q_table(filename=\"q_table.pkl\"):",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "save_q_table",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def save_q_table(filename=\"q_table.pkl\"):\n    with open(filename, \"wb\") as file:\n        pickle.dump(q_table, file)\ndef load_q_table(filename=\"q_table.pkl\"):\n    global q_table\n    try:\n        with open(filename, \"rb\") as file:\n            q_table = pickle.load(file)\n    except FileNotFoundError:\n        q_table = {}",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "load_q_table",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def load_q_table(filename=\"q_table.pkl\"):\n    global q_table\n    try:\n        with open(filename, \"rb\") as file:\n            q_table = pickle.load(file)\n    except FileNotFoundError:\n        q_table = {}\n# Representar el estado del tablero como una cadena\ndef get_board_state():\n    # Convierte cada elemento del tablero en un string, manejando valores None",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "get_board_state",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def get_board_state():\n    # Convierte cada elemento del tablero en un string, manejando valores None\n    return ''.join(''.join(str(cell) if cell is not None else '.' for cell in row) for row in board)\n# Elegir una acción usando la política ε-greedy\ndef choose_action(state, all_valid_moves):\n    if random.random() < epsilon:  # Exploración\n        return random.choice(all_valid_moves)\n    else:  # Explotación\n        q_values = [q_table.get((state, move), 0) for move in all_valid_moves]\n        max_q = max(q_values)",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "choose_action",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def choose_action(state, all_valid_moves):\n    if random.random() < epsilon:  # Exploración\n        return random.choice(all_valid_moves)\n    else:  # Explotación\n        q_values = [q_table.get((state, move), 0) for move in all_valid_moves]\n        max_q = max(q_values)\n        best_moves = [move for move, q in zip(all_valid_moves, q_values) if q == max_q]\n        return random.choice(best_moves)\n# Actualizar la tabla Q\ndef update_q_table(state, action, reward, next_state):",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "update_q_table",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def update_q_table(state, action, reward, next_state):\n    current_q = q_table.get((state, action), 0)\n    # Usa *action[0] para desestructurar la posición de la pieza\n    max_next_q = max(\n        [q_table.get((next_state, a), 0) for a in get_valid_moves(*action[0])], \n        default=0\n    )\n    q_table[(state, action)] = current_q + alpha * (reward + gamma * max_next_q - current_q)\n# Turno de la máquina con Q-Learning\ndef machine_turn():",
         "detail": "app",
         "documentation": {}
     },
@@ -76,7 +130,16 @@
         "kind": 2,
         "importPath": "app",
         "description": "app",
-        "peekOfCode": "def machine_turn():\n    for row in range(ROWS):\n        for col in range(COLS):\n            if board[row][col] in (\"B\", \"QB\"):\n                valid_moves = get_valid_moves(row, col)\n                if valid_moves:\n                    target = random.choice(valid_moves)\n                    move_piece((row, col), *target)\n                    return\ndef human_turn(event, selected_piece, valid_moves, turn):",
+        "peekOfCode": "def machine_turn():\n    global q_table\n    state = get_board_state()\n    all_valid_moves = []\n    # Recopilar todos los movimientos válidos de las piezas de la máquina\n    for row in range(ROWS):\n        for col in range(COLS):\n            if board[row][col] in (\"B\", \"QB\"):\n                valid_moves = get_valid_moves(row, col)\n                for move in valid_moves:",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "get_reward",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def get_reward(next_state):\n    # Contar las piezas restantes de cada jugador\n    human_pieces = sum(row.count(\"W\") + row.count(\"QW\") for row in board)\n    machine_pieces = sum(row.count(\"B\") + row.count(\"QB\") for row in board)\n    # Recompensa por capturar una pieza\n    captured_human_pieces = human_pieces - sum(row.count(\"W\") + row.count(\"QW\") for row in next_state)\n    captured_machine_pieces = machine_pieces - sum(row.count(\"B\") + row.count(\"QB\") for row in next_state)\n    reward = machine_pieces - human_pieces  # Recompensa base\n    # Aumentar la recompensa si la máquina capturó una pieza humana\n    reward += captured_human_pieces * 12  # Bono por capturar piezas humanas",
         "detail": "app",
         "documentation": {}
     },
@@ -130,7 +193,7 @@
         "kind": 5,
         "importPath": "app",
         "description": "app",
-        "peekOfCode": "LIGHT_COLOR = (205, 170, 125) \nDARK_COLOR = (120, 85, 55) \nWHITE = (255, 255, 255)\nBLACK = (0, 0, 0)\nBLUE = (0, 0, 255)\n# Configuración de la ventana\nWIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Tablero inicial dinámico\nboard = [[None for _ in range(COLS)] for _ in range(ROWS)]",
+        "peekOfCode": "LIGHT_COLOR = (205, 170, 125) \nDARK_COLOR = (120, 85, 55) \nWHITE = (255, 255, 255)\nBLACK = (0, 0, 0)\nBLUE = (0, 0, 255)\n# Configuración de la ventana\nWIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Parámetros de Q-Learning\nalpha = 0.1      # Tasa de aprendizaje",
         "detail": "app",
         "documentation": {}
     },
@@ -139,7 +202,7 @@
         "kind": 5,
         "importPath": "app",
         "description": "app",
-        "peekOfCode": "DARK_COLOR = (120, 85, 55) \nWHITE = (255, 255, 255)\nBLACK = (0, 0, 0)\nBLUE = (0, 0, 255)\n# Configuración de la ventana\nWIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Tablero inicial dinámico\nboard = [[None for _ in range(COLS)] for _ in range(ROWS)]\n# Inicializar las piezas dinámicamente",
+        "peekOfCode": "DARK_COLOR = (120, 85, 55) \nWHITE = (255, 255, 255)\nBLACK = (0, 0, 0)\nBLUE = (0, 0, 255)\n# Configuración de la ventana\nWIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Parámetros de Q-Learning\nalpha = 0.1      # Tasa de aprendizaje\ngamma = 0.9      # Factor de descuento",
         "detail": "app",
         "documentation": {}
     },
@@ -148,7 +211,7 @@
         "kind": 5,
         "importPath": "app",
         "description": "app",
-        "peekOfCode": "WHITE = (255, 255, 255)\nBLACK = (0, 0, 0)\nBLUE = (0, 0, 255)\n# Configuración de la ventana\nWIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Tablero inicial dinámico\nboard = [[None for _ in range(COLS)] for _ in range(ROWS)]\n# Inicializar las piezas dinámicamente\ndef init_pieces():",
+        "peekOfCode": "WHITE = (255, 255, 255)\nBLACK = (0, 0, 0)\nBLUE = (0, 0, 255)\n# Configuración de la ventana\nWIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Parámetros de Q-Learning\nalpha = 0.1      # Tasa de aprendizaje\ngamma = 0.9      # Factor de descuento\nepsilon = 0.2    # Probabilidad de exploración",
         "detail": "app",
         "documentation": {}
     },
@@ -157,7 +220,7 @@
         "kind": 5,
         "importPath": "app",
         "description": "app",
-        "peekOfCode": "BLACK = (0, 0, 0)\nBLUE = (0, 0, 255)\n# Configuración de la ventana\nWIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Tablero inicial dinámico\nboard = [[None for _ in range(COLS)] for _ in range(ROWS)]\n# Inicializar las piezas dinámicamente\ndef init_pieces():\n    for row in range(ROWS):",
+        "peekOfCode": "BLACK = (0, 0, 0)\nBLUE = (0, 0, 255)\n# Configuración de la ventana\nWIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Parámetros de Q-Learning\nalpha = 0.1      # Tasa de aprendizaje\ngamma = 0.9      # Factor de descuento\nepsilon = 0.2    # Probabilidad de exploración\nq_table = {}     # Tabla Q para almacenar los valores",
         "detail": "app",
         "documentation": {}
     },
@@ -166,7 +229,7 @@
         "kind": 5,
         "importPath": "app",
         "description": "app",
-        "peekOfCode": "BLUE = (0, 0, 255)\n# Configuración de la ventana\nWIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Tablero inicial dinámico\nboard = [[None for _ in range(COLS)] for _ in range(ROWS)]\n# Inicializar las piezas dinámicamente\ndef init_pieces():\n    for row in range(ROWS):\n        for col in range(COLS):",
+        "peekOfCode": "BLUE = (0, 0, 255)\n# Configuración de la ventana\nWIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Parámetros de Q-Learning\nalpha = 0.1      # Tasa de aprendizaje\ngamma = 0.9      # Factor de descuento\nepsilon = 0.2    # Probabilidad de exploración\nq_table = {}     # Tabla Q para almacenar los valores\n# Tablero inicial dinámico",
         "detail": "app",
         "documentation": {}
     },
@@ -175,7 +238,43 @@
         "kind": 5,
         "importPath": "app",
         "description": "app",
-        "peekOfCode": "WIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Tablero inicial dinámico\nboard = [[None for _ in range(COLS)] for _ in range(ROWS)]\n# Inicializar las piezas dinámicamente\ndef init_pieces():\n    for row in range(ROWS):\n        for col in range(COLS):\n            if row == 0 and col % 2 == 0:  # Primera fila (blancas) en columnas pares\n                board[row][col] = \"W\"  # Blancas",
+        "peekOfCode": "WIN = pygame.display.set_mode((WIDTH, HEIGHT))\npygame.display.set_caption(\"Damas 4x4\")\n# Parámetros de Q-Learning\nalpha = 0.1      # Tasa de aprendizaje\ngamma = 0.9      # Factor de descuento\nepsilon = 0.2    # Probabilidad de exploración\nq_table = {}     # Tabla Q para almacenar los valores\n# Tablero inicial dinámico\nboard = [[None for _ in range(COLS)] for _ in range(ROWS)]\n# Inicializar las piezas dinámicamente",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "alpha",
+        "kind": 5,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "alpha = 0.1      # Tasa de aprendizaje\ngamma = 0.9      # Factor de descuento\nepsilon = 0.2    # Probabilidad de exploración\nq_table = {}     # Tabla Q para almacenar los valores\n# Tablero inicial dinámico\nboard = [[None for _ in range(COLS)] for _ in range(ROWS)]\n# Inicializar las piezas dinámicamente\ndef init_pieces():\n    for row in range(ROWS):\n        for col in range(COLS):",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "gamma",
+        "kind": 5,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "gamma = 0.9      # Factor de descuento\nepsilon = 0.2    # Probabilidad de exploración\nq_table = {}     # Tabla Q para almacenar los valores\n# Tablero inicial dinámico\nboard = [[None for _ in range(COLS)] for _ in range(ROWS)]\n# Inicializar las piezas dinámicamente\ndef init_pieces():\n    for row in range(ROWS):\n        for col in range(COLS):\n            if row == 0 and col % 2 == 0:  # Primera fila (blancas) en columnas pares",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "epsilon",
+        "kind": 5,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "epsilon = 0.2    # Probabilidad de exploración\nq_table = {}     # Tabla Q para almacenar los valores\n# Tablero inicial dinámico\nboard = [[None for _ in range(COLS)] for _ in range(ROWS)]\n# Inicializar las piezas dinámicamente\ndef init_pieces():\n    for row in range(ROWS):\n        for col in range(COLS):\n            if row == 0 and col % 2 == 0:  # Primera fila (blancas) en columnas pares\n                board[row][col] = \"W\"  # Blancas",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "q_table",
+        "kind": 5,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "q_table = {}     # Tabla Q para almacenar los valores\n# Tablero inicial dinámico\nboard = [[None for _ in range(COLS)] for _ in range(ROWS)]\n# Inicializar las piezas dinámicamente\ndef init_pieces():\n    for row in range(ROWS):\n        for col in range(COLS):\n            if row == 0 and col % 2 == 0:  # Primera fila (blancas) en columnas pares\n                board[row][col] = \"W\"  # Blancas\n            elif row == 3 and col % 2 != 0:  # Última fila (negras) en columnas impares",
         "detail": "app",
         "documentation": {}
     },

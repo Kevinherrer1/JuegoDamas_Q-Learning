@@ -1,5 +1,6 @@
 import pygame
 import random
+import pickle
 
 
 # Inicializar Pygame
@@ -20,6 +21,15 @@ BLUE = (0, 0, 255)
 # Configuración de la ventana
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Damas 4x4")
+
+
+
+# Parámetros de Q-Learning
+alpha = 0.1      # Tasa de aprendizaje
+gamma = 0.9      # Factor de descuento
+epsilon = 0.2    # Probabilidad de exploración
+q_table = {}     # Tabla Q para almacenar los valores
+
 
 # Tablero inicial dinámico
 board = [[None for _ in range(COLS)] for _ in range(ROWS)]
@@ -123,9 +133,8 @@ def move_piece(selected_piece, target_row, target_col):
         board[target_row][target_col] = "QW"  # Convertir en reina blanca
     elif piece == "B" and target_row == 0:  # Si es negra y llega a la fila 3
         board[target_row][target_col] = "QB"  # Convertir en reina negra
-
-
-
+        
+        
 # Dibujar movimientos válidos
 def draw_valid_moves(win, moves):
     for row, col in moves:
@@ -134,17 +143,102 @@ def draw_valid_moves(win, moves):
         pygame.draw.circle(win, BLUE, (x, y), 10)
 
 
+# Guardar y cargar Q-Table
+def save_q_table(filename="q_table.pkl"):
+    with open(filename, "wb") as file:
+        pickle.dump(q_table, file)
 
-# Movimiento de la máquina
+def load_q_table(filename="q_table.pkl"):
+    global q_table
+    try:
+        with open(filename, "rb") as file:
+            q_table = pickle.load(file)
+    except FileNotFoundError:
+        q_table = {}
+
+# Representar el estado del tablero como una cadena
+def get_board_state():
+    # Convierte cada elemento del tablero en un string, manejando valores None
+    return ''.join(''.join(str(cell) if cell is not None else '.' for cell in row) for row in board)
+
+# Elegir una acción usando la política ε-greedy
+def choose_action(state, all_valid_moves):
+    if random.random() < epsilon:  # Exploración
+        return random.choice(all_valid_moves)
+    else:  # Explotación
+        q_values = [q_table.get((state, move), 0) for move in all_valid_moves]
+        max_q = max(q_values)
+        best_moves = [move for move, q in zip(all_valid_moves, q_values) if q == max_q]
+        return random.choice(best_moves)
+
+
+# Actualizar la tabla Q
+def update_q_table(state, action, reward, next_state):
+    current_q = q_table.get((state, action), 0)
+    
+    # Usa *action[0] para desestructurar la posición de la pieza
+    max_next_q = max(
+        [q_table.get((next_state, a), 0) for a in get_valid_moves(*action[0])], 
+        default=0
+    )
+    
+    q_table[(state, action)] = current_q + alpha * (reward + gamma * max_next_q - current_q)
+
+
+
+# Turno de la máquina con Q-Learning
 def machine_turn():
+    global q_table
+
+    state = get_board_state()
+    all_valid_moves = []
+
+    # Recopilar todos los movimientos válidos de las piezas de la máquina
     for row in range(ROWS):
         for col in range(COLS):
             if board[row][col] in ("B", "QB"):
                 valid_moves = get_valid_moves(row, col)
-                if valid_moves:
-                    target = random.choice(valid_moves)
-                    move_piece((row, col), *target)
-                    return
+                for move in valid_moves:
+                    all_valid_moves.append(((row, col), move))
+
+    if all_valid_moves:
+        action = choose_action(state, all_valid_moves)
+        piece_pos, move = action
+        move_piece(piece_pos, *move)
+
+        # Actualizar Q-Table
+        next_state = get_board_state()
+        reward = get_reward(next_state)
+        update_q_table(state, action, reward, next_state)
+
+
+                
+                
+def get_reward(next_state):
+    # Contar las piezas restantes de cada jugador
+    human_pieces = sum(row.count("W") + row.count("QW") for row in board)
+    machine_pieces = sum(row.count("B") + row.count("QB") for row in board)
+    
+    # Recompensa por capturar una pieza
+    captured_human_pieces = human_pieces - sum(row.count("W") + row.count("QW") for row in next_state)
+    captured_machine_pieces = machine_pieces - sum(row.count("B") + row.count("QB") for row in next_state)
+    
+    reward = machine_pieces - human_pieces  # Recompensa base
+    
+    # Aumentar la recompensa si la máquina capturó una pieza humana
+    reward += captured_human_pieces * 12  # Bono por capturar piezas humanas
+    
+    # Penalizar si la máquina perdió una pieza
+    reward -= captured_machine_pieces * 5  # Penalización por perder piezas de la máquina
+
+    # Si el juego terminó, asignar una gran recompensa o penalización
+    if human_pieces == 0:
+        return 50  # Máquina gana
+    elif machine_pieces == 0:
+        return -50  # Humano gana
+    else:
+        return reward  # Recompensa normal
+
 
 
 
@@ -208,8 +302,8 @@ def draw_winner(win, winner):
     win.blit(text, text_rect)
     pygame.display.update()
     pygame.time.delay(3000)  # Esperar 3 segundos antes de cerrar
-
-
+    
+    
 # Juego principal
 def main():
     run = True
@@ -268,4 +362,8 @@ def main():
     pygame.quit()
 
 if __name__ == "__main__":
-    main()
+    load_q_table()
+    try:
+        main()
+    finally:
+        save_q_table()
